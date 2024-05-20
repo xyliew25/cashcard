@@ -19,9 +19,9 @@ class SecurityConfig {
     // Spring Security expects a Bean to configure its Filter Chain.
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(request -> request.requestMatchers("/cashcards/**").authenticated())
+        http.authorizeHttpRequests(request -> request.requestMatchers("/cashcards/**").hasRole("CARD-OWNER")) // RBAC authorization
             .httpBasic(Customizer.withDefaults())
-            .csrf(csrf -> csrf.disable());
+            .csrf(csrf -> csrf.disable()); // CSRF disabled cuz API service only used by non-browser clients
         return http.build();
     }
 
@@ -32,12 +32,18 @@ class SecurityConfig {
 
     @Bean
     UserDetailsService testOnlyUsers(PasswordEncoder passwordEncoder) {
+        // Builder pattern.
         User.UserBuilder users = User.builder();
         UserDetails sarah = users
             .username("sarah1")
             .password(passwordEncoder.encode("abc123"))
-            .roles() // No roles for now
+            .roles("CARD-OWNER")
             .build();
-        return new InMemoryUserDetailsManager(sarah);
+        UserDetails hankOwnsNoCards = users
+            .username("hank-owns-no-cards")
+            .password(passwordEncoder.encode("qrs456"))
+            .roles("NON-OWNER")
+            .build();
+        return new InMemoryUserDetailsManager(sarah, hankOwnsNoCards);
     }
 }
