@@ -1,5 +1,9 @@
 package example.cashcard;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Optional;
 
 // TODO what is Component actl?
@@ -44,5 +49,27 @@ class CashCardController {
             .buildAndExpand(savedCashCard.id())
             .toUri();
         return ResponseEntity.created(locationOfNewCashCard).build();
+    }
+
+    // Must delete this mtd to prevent the err below.
+    // Caused by: java.lang.IllegalStateException: Ambiguous mapping. Cannot map 'cashCardController' method
+    // example.cashcard.CashCardController#findAll(Pageable)
+    // to {GET [/cashcards]}: There is already 'cashCardController' bean method
+    // example.cashcard.CashCardController#findAll() mapped.
+    // @GetMapping()
+    // private ResponseEntity<Iterable<CashCard>> findAll() {
+    //     return ResponseEntity.ok(cashCardRepository.findAll());
+    // }
+
+    @GetMapping
+    private ResponseEntity<List<CashCard>> findAll(Pageable pageable) { // Spring Web Pageable obj
+        Page<CashCard> page = cashCardRepository.findAll(
+            PageRequest.of(
+                pageable.getPageNumber(), // default is 0
+                pageable.getPageSize(), // default is 20
+                // pageable.getSort()
+                pageable.getSortOr(Sort.by(Sort.Direction.ASC, "amount")) // use getSortOr() to supply default value
+            )); // PageRequest is a basic Java Bean implementation of Pageable TODO wdym?
+        return ResponseEntity.ok(page.getContent());
     }
 }
