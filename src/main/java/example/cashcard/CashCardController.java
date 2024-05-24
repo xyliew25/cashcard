@@ -29,12 +29,16 @@ class CashCardController {
         this.cashCardRepository = cashCardRepository;
     }
 
+    private CashCard findCashCard(Long requestedId, Principal principal) {
+        return cashCardRepository.findByIdAndOwner(requestedId, principal.getName());
+    }
+
     @GetMapping("/{requestedId}") // Instructs Spring to map HTTP GET requests onto handler methods.
     private ResponseEntity<CashCard> findById(
             @PathVariable Long requestedId, // Instructs Spring to inject URI template variable value into method parameter.
             Principal principal
     ) {
-        CashCard cashCard = cashCardRepository.findByIdAndOwner(requestedId, principal.getName());
+        CashCard cashCard = findCashCard(requestedId, principal);
         if (cashCard != null) {
             return ResponseEntity.ok(cashCard);
         }
@@ -87,7 +91,7 @@ class CashCardController {
             @PathVariable Long requestedId,
             @RequestBody CashCard cashCardUpdate,
             Principal principal) {
-        CashCard cashCard = cashCardRepository.findByIdAndOwner(requestedId, principal.getName());
+        CashCard cashCard = findCashCard(requestedId, principal);
         if (cashCard != null) {
             CashCard updatedCashCard = new CashCard(cashCard.id(), cashCardUpdate.amount(), principal.getName());
             // TODO does saving with same id overwrite exising one? Is it related to schema.sql?
