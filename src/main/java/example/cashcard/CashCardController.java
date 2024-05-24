@@ -34,9 +34,9 @@ class CashCardController {
             @PathVariable Long requestedId, // Instructs Spring to inject URI template variable value into method parameter.
             Principal principal
     ) {
-        Optional<CashCard> cashCardOptional = Optional.ofNullable(cashCardRepository.findByIdAndOwner(requestedId, principal.getName()));
-        if (cashCardOptional.isPresent()) {
-            return ResponseEntity.ok(cashCardOptional.get());
+        CashCard cashCard = cashCardRepository.findByIdAndOwner(requestedId, principal.getName());
+        if (cashCard != null) {
+            return ResponseEntity.ok(cashCard);
         }
         return ResponseEntity.notFound().build();
     }
