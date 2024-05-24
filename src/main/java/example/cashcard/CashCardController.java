@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -79,5 +80,20 @@ class CashCardController {
                 pageable.getSortOr(Sort.by(Sort.Direction.ASC, "amount")) // use getSortOr() to supply default value
             )); // PageRequest is a basic Java Bean implementation of Pageable TODO wdym?
         return ResponseEntity.ok(page.getContent());
+    }
+
+    @PutMapping("/{requestedId}")
+    private ResponseEntity<Void> putCashCard(
+            @PathVariable Long requestedId,
+            @RequestBody CashCard cashCardUpdate,
+            Principal principal) {
+        CashCard cashCard = cashCardRepository.findByIdAndOwner(requestedId, principal.getName());
+        if (cashCard != null) {
+            CashCard updatedCashCard = new CashCard(cashCard.id(), cashCardUpdate.amount(), principal.getName());
+            // TODO does saving with same id overwrite exising one? Is it related to schema.sql?
+            cashCardRepository.save(updatedCashCard);
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 }
